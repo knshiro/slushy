@@ -1,12 +1,19 @@
 # Slushy a web crawler written in Scala
 
-# Get started
+## Get started
 
+Clone and publish the project locally
 ```
 git clone git@github.com:knshiro/slushy.git
 sbt publish-local
 ```
 
+Add dependency to build.sbt
+```
+libraryDependencies ++= "me.ugo" %% "slushy" % "0.0.1-SNAPSHOT"
+```
+
+Use it!
 ```scala
 import me.ugo.slushy.Crawler
 import com.netaporter.uri.dsl._
