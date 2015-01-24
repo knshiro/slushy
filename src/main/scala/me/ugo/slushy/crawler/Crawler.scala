@@ -14,7 +14,8 @@ trait Crawler {
 
   def scraper: Scraper
 
-  def startUrls: Seq[Uri]
+  def startUrls: Seq[Uri] = List()
+  protected def generatedUrls:Seq[Uri] = List()
 
   lazy val allowedDomains: Set[String] = {
     startUrls.flatMap(_.host).toSet
@@ -71,7 +72,7 @@ trait Crawler {
    * Start running the spider
    */
   def crawl()(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.fold(startUrls map scrapePage)(()){(_,_)=>()}
+    Future.fold((startUrls ++ generatedUrls) map scrapePage)(()){(_,_)=>()}
   }
 
 }
@@ -80,14 +81,14 @@ object Crawler {
 
   def apply(url:Uri, concurrentRequests: Int)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = apply(Seq(url),concurrentRequests)(f)
   def apply(urls:Seq[Uri], concurrentRequests:Int)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = new Crawler with UrlStorageBloomFilter{
-    override val scraper: Scraper = new FixedNumberConcurrentRequestScraper(concurrentRequests,ec)
+    override val scraper: Scraper = new FixedNumberConcurrentRequestScraper(concurrentRequests)
     override def startUrls: Seq[Uri] = urls
     onReceivedPage(f)
   }
 
   def apply(url:Uri, frequency: Frequency)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = apply(Seq(url),frequency)(f)
   def apply(urls:Seq[Uri], frequency: Frequency)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = new Crawler with UrlStorageBloomFilter{
-    override val scraper: Scraper = new ThrottledHttpScraper(frequency,ec)
+    override val scraper: Scraper = new ThrottledHttpScraper(frequency)
     override def startUrls: Seq[Uri] = urls
     onReceivedPage(f)
   }

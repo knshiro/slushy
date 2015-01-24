@@ -80,14 +80,14 @@ trait ConcurrentScraper extends Scraper {
 
 }
 
-class FixedNumberConcurrentRequestScraper(concurrentRequests: Int, implicit val executionContext: ExecutionContext) extends HttpScraper with ConcurrentScraper {
+class FixedNumberConcurrentRequestScraper(concurrentRequests: Int)(implicit val executionContext: ExecutionContext) extends HttpScraper with ConcurrentScraper {
   val maxQueueSize: Int = Int.MaxValue
   leftRequestAllowance = concurrentRequests
   override protected def onScraped() = synchronized(leftRequestAllowance += 1)
 
 }
 
-class ThrottledHttpScraper(frequencyThreshold: Frequency, implicit val executionContext: ExecutionContext) extends HttpScraper with ConcurrentScraper {
+class ThrottledHttpScraper(frequencyThreshold: Frequency)(implicit val executionContext: ExecutionContext) extends HttpScraper with ConcurrentScraper {
 
   val maxQueueSize: Int = Int.MaxValue
 
