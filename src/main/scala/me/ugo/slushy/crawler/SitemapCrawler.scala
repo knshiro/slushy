@@ -16,7 +16,7 @@ trait SitemapCrawler extends Crawler { self:UrlStorage =>
   }
 
   override protected def generatedUrls = {
-    super.generatedUrls ++ super.startUrls.flatMap { url =>
+    super.generatedUrls ++ startUrls.flatMap { url =>
       openSitemap(url)
     }
   }

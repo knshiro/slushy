@@ -14,7 +14,7 @@ trait Crawler {
 
   def scraper: Scraper
 
-  def startUrls: Seq[Uri] = List()
+  def startUrls: Seq[Uri]
   protected def generatedUrls:Seq[Uri] = List()
 
   lazy val allowedDomains: Set[String] = {
@@ -82,14 +82,14 @@ object Crawler {
   def apply(url:Uri, concurrentRequests: Int)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = apply(Seq(url),concurrentRequests)(f)
   def apply(urls:Seq[Uri], concurrentRequests:Int)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = new Crawler with UrlStorageBloomFilter{
     override val scraper: Scraper = new FixedNumberConcurrentRequestScraper(concurrentRequests)
-    override def startUrls: Seq[Uri] = urls
+    override val startUrls: Seq[Uri] = urls
     onReceivedPage(f)
   }
 
   def apply(url:Uri, frequency: Frequency)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = apply(Seq(url),frequency)(f)
   def apply(urls:Seq[Uri], frequency: Frequency)(f:HtmlPage => Any)(implicit ec:ExecutionContext):Crawler = new Crawler with UrlStorageBloomFilter{
     override val scraper: Scraper = new ThrottledHttpScraper(frequency)
-    override def startUrls: Seq[Uri] = urls
+    override val startUrls: Seq[Uri] = urls
     onReceivedPage(f)
   }
 
