@@ -5,11 +5,15 @@ import java.util.concurrent.{TimeUnit, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
 import breeze.numerics.log
+import com.ning.http.client.Response
+import com.ning.http.client.cookie.Cookie
 import model.HtmlPage
 
 import com.netaporter.uri.Uri
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 
-import scala.collection.mutable.Queue
+import scala.collection.mutable.{ArrayBuffer, Queue}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Promise, ExecutionContext, Future}
 import dispatch._
@@ -20,10 +24,20 @@ import scala.util.Try
 /**
  * Created by Ugo Bataillard on 1/24/15.
  */
-class HttpScraper extends Scraper {
+class HttpScraper(acceptCookies:Boolean = true) extends Scraper {
+
+  val cookieJar = new ArrayBuffer[Cookie]
+
+  private val resHandler: Response => Document = r => {
+    import scala.collection.JavaConverters._
+    if(acceptCookies) cookieJar.appendAll(r.getCookies.asScala)
+    dispatch.as.jsoup.Document(r)
+  }
 
   def scrape(pageUrl: Uri)(implicit ec: ExecutionContext): Future[HtmlPage] = {
-    Http(url(pageUrl.toString) > as.jsoup.Document) map (HtmlPage(pageUrl, _))
+    val r = url(pageUrl.toString)
+    if(acceptCookies) cookieJar foreach r.addCookie
+    Http(r > resHandler) map (HtmlPage(pageUrl, _))
   }
 }
 
@@ -80,14 +94,14 @@ trait ConcurrentScraper extends Scraper {
 
 }
 
-class FixedNumberConcurrentRequestScraper(concurrentRequests: Int)(implicit val executionContext: ExecutionContext) extends HttpScraper with ConcurrentScraper {
+class FixedNumberConcurrentRequestScraper(concurrentRequests: Int, acceptCookies:Boolean = true)(implicit val executionContext: ExecutionContext) extends HttpScraper(acceptCookies) with ConcurrentScraper {
   val maxQueueSize: Int = Int.MaxValue
   leftRequestAllowance = concurrentRequests
   override protected def onScraped() = synchronized(leftRequestAllowance += 1)
 
 }
 
-class ThrottledHttpScraper(frequencyThreshold: Frequency)(implicit val executionContext: ExecutionContext) extends HttpScraper with ConcurrentScraper {
+class ThrottledHttpScraper(frequencyThreshold: Frequency, acceptCookies:Boolean = true)(implicit val executionContext: ExecutionContext) extends HttpScraper(acceptCookies) with ConcurrentScraper {
 
   val maxQueueSize: Int = Int.MaxValue
 

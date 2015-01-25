@@ -14,7 +14,6 @@ trait StreamCrawler { self:Crawler =>
   private val q = async.unboundedQueue[HtmlPage]
 
   onReceivedPage { page =>
-    println("Enqueue page: " + page.url)
     q.enqueueOne( page ).run
   }
 
