@@ -3,6 +3,7 @@ package me.ugo.slushy.crawler
 import com.netaporter.uri.Uri
 import me.ugo.slushy.model.HtmlPage
 import me.ugo.slushy.scraper.{FixedNumberConcurrentRequestScraper, Frequency, ThrottledHttpScraper, Scraper}
+import me.ugo.slushy.util.FutureUtil
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Future, ExecutionContext}
 
@@ -58,21 +59,21 @@ trait Crawler {
   def scrapePage(url: Uri)(implicit ec: ExecutionContext): Future[Unit] = {
     if (isToBeCraled(url)) {
       crawled(url)
+      onLinkFoundCallbacks.foreach(_(url))
       scraper.scrape(url) flatMap { page =>
         onReceivedPageCallbacks.foreach(_(page))
-        Future.fold{page.links.map { link =>
-          onLinkFoundCallbacks.foreach(_(link))
+        FutureUtil.waitForAll {page.links.map { link =>
           scrapePage(link)
-        }}(()){(_,_) =>()}
+        }}
       }
-    } else Future.successful()
+    } else Future.successful(())
   }
 
   /**
    * Start running the spider
    */
   def crawl()(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.fold((startUrls ++ generatedUrls) map scrapePage)(()){(_,_)=>()}
+    FutureUtil.waitForAll((startUrls ++ generatedUrls) map scrapePage)
   }
 
 }
