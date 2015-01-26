@@ -21,13 +21,13 @@ trait UrlStorageSet extends UrlStorage {
   private val urls = MSet[String]()
 
   override def isCrawled(url:Uri):Boolean = urls.contains(url.toString)
-  override def crawled(url: Uri): Unit = synchronized( urls += url.toString )
+  override def crawled(url: Uri): Unit = { synchronized( urls += url.toString); () }
 }
 
 trait UrlStorageBloomFilter extends UrlStorage {
 
   val bf = BloomFilter.optimallySized[String](1000000, 0.01)
   override def isCrawled(url:Uri):Boolean = bf.contains(url.toString)
-  override def crawled(url: Uri): Unit = synchronized( bf += url.toString )
+  override def crawled(url: Uri): Unit = { synchronized( bf += url.toString); () }
 }
 

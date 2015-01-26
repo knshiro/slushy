@@ -4,6 +4,18 @@ version := "0.0.1-SNAPSHOT"
 
 scalaVersion := "2.11.5"
 
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-Xlint",
+  "-Ywarn-adapted-args",
+  "-Ywarn-value-discard",
+  "-Ywarn-inaccessible",
+  "-Ywarn-dead-code"
+)
+
+
 resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
 
 libraryDependencies ++= Seq(
